@@ -6,7 +6,7 @@ Solidity is a statically-typed, contract-oriented programming language designed 
 **Basic Contract Template:**
 
 ```jsx
-text// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
 contract MyContract {
@@ -76,7 +76,7 @@ people.push(Person(25, "Alice", msg.sender));
 
 **Function Syntax and Types:**
 
-```solidity
+```jsx
 contract MyContract {
     uint256 private _number;
 
@@ -125,7 +125,7 @@ contract MyContract {
 
 **Reference Types Must Specify Location:**
 
-```solidity
+```jsx
 function processArray(uint[] memory _data) public {
     // _data is stored in memory (temporary)
 }
@@ -141,7 +141,7 @@ function modifyState(uint[] storage _data) internal {
 
 **Keccak256 Hash Function:**
 
-```solidity
+```jsx
 function generateHash(string memory _input) public pure returns (bytes32) {
     return keccak256(abi.encodePacked(_input));
 }
@@ -152,7 +152,7 @@ function generateHash(string memory _input) public pure returns (bytes32) {
 
 **Event Declaration and Emission:**
 
-```solidity
+```jsx
 contract EventExample {
     event Transfer(address indexed from, address indexed to, uint256 value);
     
@@ -164,3 +164,227 @@ contract EventExample {
 ```
 
 Events communicate blockchain occurrences to external applications and are cheaper than storing data in state variables.
+
+
+## Ethereum Accounts and Addresses
+
+Ethereum accounts are digital identities that can hold Ether (ETH) and interact with the blockchain. Each account has a unique address—a 42-character hexadecimal identifier starting with "0x" (e.g., `0x0cE446255506E92DF41614C46F1d6df9Cc969183`).
+
+**Types of Accounts:**
+
+- **Externally Owned Accounts (EOA):** Controlled by private keys, used by humans
+- **Contract Accounts:** Controlled by smart contract code, no private keys
+
+
+## Mappings
+
+**Definition and Usage:**
+
+Mappings are key-value data structures for efficient storage and lookup, similar to hash tables or dictionaries in other languages.
+
+```jsx
+// Syntax: mapping(keyType => valueType) visibility name;
+mapping(address => uint) public accountBalance;
+mapping(uint => string) userIdToName;
+mapping(address => mapping(address => uint)) public allowances; // Nested mapping
+
+contract Bank {
+    mapping(address => uint) public balances;
+    
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+    
+    function getBalance(address _user) public view returns (uint) {
+        return balances[_user];
+    }
+}
+```
+
+**Key Features:**
+
+- Fast O(1) lookups
+- Cannot iterate over keys
+- All possible keys exist with default zero values
+- Only usable in storage, not memory
+
+
+## Global Variables
+
+**msg.sender :**
+
+A global variable containing the address of the account that called the current function.
+
+```jsx
+function withdraw(uint _amount) public {
+    require(balances[msg.sender] >= _amount, "Insufficient balance");
+    balances[msg.sender] -= _amount;
+    payable(msg.sender).transfer(_amount);
+}
+```
+
+**Other Important Globals :**
+
+- `msg.value`: Amount of wei sent with the transaction
+- `block.timestamp`: Current block timestamp
+- `block.number`: Current block number
+
+
+## require Statements
+
+**Purpose:**
+
+`require` validates conditions and reverts the transaction if they fail, providing error messages.
+
+```jsx
+function transfer(address _to, uint _amount) public {
+    require(_to != address(0), "Cannot transfer to zero address");
+    require(balances[msg.sender] >= _amount, "Insufficient balance");
+    
+    balances[msg.sender] -= _amount;
+    balances[_to] += _amount;
+}
+```
+
+
+## Inheritance
+
+**Basic Inheritance:**
+
+Solidity supports single and multiple inheritance using the `is` keyword.
+
+```jsx
+// Base contract
+contract Animal {
+    string public name;
+    
+    function speak() public virtual returns (string memory) {
+        return "Some sound";
+    }
+}
+
+// Derived contract
+contract Dog is Animal {
+    function speak() public pure override returns (string memory) {
+        return "Woof!";
+    }
+}
+
+// Multiple inheritance
+contract Mammal {
+    bool public warmBlooded = true;
+}
+
+contract Pet is Animal, Mammal {
+    address public owner;
+    
+    constructor(string memory _name, address _owner) {
+        name = _name;
+        owner = _owner;
+    }
+}
+```
+
+**Key Keywords:**
+
+- `virtual`: Allows function to be overridden
+- `override`: Required when overriding a function
+- `super`: Calls parent contract's function
+
+
+## Import Statements
+
+**File Imports :**
+
+```jsx
+import "./MyContract.sol";
+import {SpecificContract} from "./contracts/SpecificContract.sol";
+import * as MyModule from "./MyModule.sol";
+```
+
+
+## Storage vs Memory
+
+**Storage :** Permanent blockchain storage, expensive gas costs, persists between function calls.
+
+**Memory :** Temporary storage during function execution, cheaper gas, cleared after function ends.
+
+```jsx
+contract DataLocation {
+    uint[] public storageArray; // State variable in storage
+    
+    function addToArray(uint[] memory _tempArray) public {
+        // _tempArray is in memory (temporary)
+        storageArray = _tempArray; // Copy from memory to storage
+    }
+    
+    function processArray() public view returns (uint[] memory) {
+        uint[] memory tempArray = new uint[](3); // Memory allocation
+        tempArray[0] = storageArray[0];
+        return tempArray; // Returns memory array
+    }
+}
+```
+
+**Data Location Rules:**
+
+- State variables are always in storage
+- Function parameters are in memory by default
+- Reference types must specify location (memory/storage/calldata)
+- Value types (uint, bool, address) don't need location specification
+
+
+## Interfaces
+
+Interfaces define function signatures without implementation, enabling contracts to interact with unknown contracts.
+
+```jsx
+// Interface definition
+interface IERC20 {
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+}
+
+// Using interface to interact with external contract
+contract TokenInteractor {
+    IERC20 public token;
+    
+    constructor(address _tokenAddress) {
+        token = IERC20(_tokenAddress);
+    }
+    
+    function getTokenBalance(address _user) public view returns (uint256) {
+        return token.balanceOf(_user);
+    }
+}
+
+// Implementing an interface
+contract MyToken is IERC20 {
+    mapping(address => uint256) private _balances;
+    uint256 private _totalSupply;
+    
+    function totalSupply() public view override returns (uint256) {
+        return _totalSupply;
+    }
+    
+    function balanceOf(address account) public view override returns (uint256) {
+        return _balances[account];
+    }
+    
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        require(_balances[msg.sender] >= amount, "Insufficient balance");
+        _balances[msg.sender] -= amount;
+        _balances[to] += amount;
+        return true;
+    }
+}
+```
+
+**Interface Rules:**
+
+- Cannot have implemented functions
+- Cannot inherit from other contracts
+- All functions must be external
+- Cannot declare constructor
+- Cannot declare state variables
