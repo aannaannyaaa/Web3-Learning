@@ -6,7 +6,7 @@ Solidity is a statically-typed, contract-oriented programming language designed 
 **Basic Contract Template:**
 
 ```jsx
-// SPDX-License-Identifier: MIT
+text// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
 contract MyContract {
@@ -76,7 +76,7 @@ people.push(Person(25, "Alice", msg.sender));
 
 **Function Syntax and Types:**
 
-```jsx
+```solidity
 contract MyContract {
     uint256 private _number;
 
@@ -125,14 +125,13 @@ contract MyContract {
 
 **Reference Types Must Specify Location:**
 
-```jsx
+```solidity
 function processArray(uint[] memory _data) public {
     // _data is stored in memory (temporary)
 }
 
 function modifyState(uint[] storage _data) internal {
     // _data references storage (permanent)
-}
 
 ```
 
@@ -141,7 +140,7 @@ function modifyState(uint[] storage _data) internal {
 
 **Keccak256 Hash Function:**
 
-```jsx
+```solidity
 function generateHash(string memory _input) public pure returns (bytes32) {
     return keccak256(abi.encodePacked(_input));
 }
@@ -152,7 +151,7 @@ function generateHash(string memory _input) public pure returns (bytes32) {
 
 **Event Declaration and Emission:**
 
-```jsx
+```solidity
 contract EventExample {
     event Transfer(address indexed from, address indexed to, uint256 value);
     
@@ -182,7 +181,7 @@ Ethereum accounts are digital identities that can hold Ether (ETH) and interact 
 
 Mappings are key-value data structures for efficient storage and lookup, similar to hash tables or dictionaries in other languages.
 
-```jsx
+```solidity
 // Syntax: mapping(keyType => valueType) visibility name;
 mapping(address => uint) public accountBalance;
 mapping(uint => string) userIdToName;
@@ -215,7 +214,7 @@ contract Bank {
 
 A global variable containing the address of the account that called the current function.
 
-```jsx
+```solidity
 function withdraw(uint _amount) public {
     require(balances[msg.sender] >= _amount, "Insufficient balance");
     balances[msg.sender] -= _amount;
@@ -236,7 +235,7 @@ function withdraw(uint _amount) public {
 
 `require` validates conditions and reverts the transaction if they fail, providing error messages.
 
-```jsx
+```solidity
 function transfer(address _to, uint _amount) public {
     require(_to != address(0), "Cannot transfer to zero address");
     require(balances[msg.sender] >= _amount, "Insufficient balance");
@@ -253,7 +252,7 @@ function transfer(address _to, uint _amount) public {
 
 Solidity supports single and multiple inheritance using the `is` keyword.
 
-```jsx
+```solidity
 // Base contract
 contract Animal {
     string public name;
@@ -296,7 +295,7 @@ contract Pet is Animal, Mammal {
 
 **File Imports :**
 
-```jsx
+```solidity
 import "./MyContract.sol";
 import {SpecificContract} from "./contracts/SpecificContract.sol";
 import * as MyModule from "./MyModule.sol";
@@ -309,7 +308,7 @@ import * as MyModule from "./MyModule.sol";
 
 **Memory :** Temporary storage during function execution, cheaper gas, cleared after function ends.
 
-```jsx
+```solidity
 contract DataLocation {
     uint[] public storageArray; // State variable in storage
     
@@ -338,7 +337,7 @@ contract DataLocation {
 
 Interfaces define function signatures without implementation, enabling contracts to interact with unknown contracts.
 
-```jsx
+```solidity
 // Interface definition
 interface IERC20 {
     function totalSupply() external view returns (uint256);
@@ -388,3 +387,48 @@ contract MyToken is IERC20 {
 - All functions must be external
 - Cannot declare constructor
 - Cannot declare state variables
+
+
+## Contract Immutability and Ownership
+
+**Immutability :** Once a contract is deployed to Ethereum, it is immutable—it cannot be altered or upgraded. All logic and data structures are set forever at the moment of deployment.
+
+**Ownable Contracts :** Many contracts follow an **Ownable** pattern, assigning an initial owner (usually the deployer) special permissions.
+
+```solidity
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyContract is Ownable {
+    constructor() Ownable(msg.sender) {}
+    
+    function restrictedFunction() public onlyOwner {
+        // Only owner can call this
+    }
+}
+```
+
+## Security Best Practices
+
+**Essential Security Measures :**
+
+- **Checks-Effects-Interactions Pattern:** Always check conditions, update state, then interact with external contracts.
+- **Reentrancy Protection:** Use OpenZeppelin's **`ReentrancyGuard`** or **`nonReentrant`** modifier.
+- **Access Control:** Implement proper role management with OpenZeppelin's **`AccessControl`**.
+- **Input Validation:** Always validate function parameters with **`require`** statements.
+
+
+## Gas Optimization
+
+**Key Optimization Strategies :**
+
+- **Use appropriate data types:** Choose smallest suitable type (e.g., **`uint8`** instead of **`uint256`** when possible).
+- **Pack struct variables:** Arrange struct members to minimize storage slots.
+- **Cache storage reads:** Store frequently accessed storage variables in memory.
+- **Use events for logging:** Events are cheaper than storage for data that doesn't need on-chain queries.
+
+## Time Variables & Units
+
+Solidity provides special variables and units for working with time:
+
+- **`block.timestamp`**: returns the current Unix timestamp (seconds since Jan 1, 1970).
+- Units: **`seconds`**, **`minutes`**, **`hours`**, **`days`**, **`weeks`**, **`years`** (all convert to seconds).
